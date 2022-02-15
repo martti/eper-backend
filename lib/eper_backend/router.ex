@@ -55,6 +55,14 @@ defmodule EperBackend.Router do
     |> send_resp(200, Jason.encode!(drawings))
   end
 
+  get "/api/vin/:vin" do
+    vin_data = EperBackend.VinServer.search(vin)
+
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(200, Jason.encode!(vin_data))
+  end
+
   defp find_alt_image(path, imagefile) do
     zip_file = "#{Application.fetch_env!(:eper_backend, :image_path)}/L_EPERFIG.res"
     imagefile = "#{path}/#{imagefile}"

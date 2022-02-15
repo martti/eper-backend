@@ -27,6 +27,14 @@ defmodule EperBackend.PartsServer do
     GenServer.call(__MODULE__, {:drawings, catalogue, group, sub_group}, 10000)
   end
 
+  def model_code(vin_code) do
+    GenServer.call(__MODULE__, {:model_code, vin_code})
+  end
+
+  def mvs(model_code, version, series) do
+    GenServer.call(__MODULE__, {:mvs, model_code, version, series})
+  end
+
   # GenServer implementation
   def init(_args) do
     {:ok, conn} =
@@ -36,6 +44,7 @@ defmodule EperBackend.PartsServer do
     load_groups(conn)
     load_sub_groups(conn)
     load_catalogues(conn)
+    load_mvs(conn)
     load_drawings(conn)
     {:ok, conn}
   end
@@ -218,6 +227,33 @@ defmodule EperBackend.PartsServer do
     end)
   end
 
+  defp load_mvs(conn) do
+    Logger.info("Loading mvs")
+
+    :ets.new(:eper_mvs, [:set, :protected, :named_table])
+
+    {:ok, rows} =
+      Jetdb.Query.query(
+        conn,
+        :select,
+        "MVS",
+        ~w(CAT_COD MOD_COD MVS_VERSION MVS_SERIE MVS_SEQ1 MVS_SEQ2 MVS_PROG VMK_TYPE_M VMK_COD_M VMK_TYPE_V VMK_COD_V MVS_DSC MVS_SINCOM_VERS MVS_ENGINE_TYPE MVS_DOORS_NUM MVS_HUNDREDKG VMK_TYPE_R VMK_COD_R SINCOM PATTERN)
+      )
+
+    Enum.each(rows, fn [catalogue, model, version, series | tail] ->
+      data = %{
+        catalogue: catalogue,
+        model: model,
+        version: version,
+        series: series,
+        rest: tail
+      }
+
+      key = [catalogue, model, version, series]
+      :ets.insert_new(:eper_mvs, {key, data})
+    end)
+  end
+
   def handle_call({:makes}, _from, conn) do
     makes =
       :ets.tab2list(:eper_makes)
@@ -259,5 +295,27 @@ defmodule EperBackend.PartsServer do
       |> Enum.map(&elem(&1, 1))
 
     {:reply, drawings, conn}
+  end
+
+  def handle_call({:model_code, search_vin_code}, _from, conn) do
+    {:ok, models} = Jetdb.Query.query(conn, :select, "VIN", ["VIN_COD", "MOD_COD"])
+
+    model_code =
+      case Enum.find(models, fn [vin_code, _model_code] ->
+             vin_code == search_vin_code
+           end) do
+        [_vin_code, model_code] -> model_code
+        _ -> nil
+      end
+
+    {:reply, model_code, conn}
+  end
+
+  def handle_call({:mvs, model, version, series}, _from, conn) do
+    mvs =
+      :ets.match_object(:eper_mvs, {:"$1", %{model: model, version: version, series: series}})
+      |> Enum.map(&elem(&1, 1))
+
+    {:reply, mvs, conn}
   end
 end
