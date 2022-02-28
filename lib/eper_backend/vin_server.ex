@@ -28,8 +28,8 @@ defmodule EperBackend.VinServer do
         chassis_number =
           if chassis_length == 8 do
             case chassis_first do
-              n when n in ["1", "6", "8"] ->
-                "0#{chassis_number}"
+              n when n in ["1", "6", "8", "9"] ->
+                "0#{String.slice(chassis_number, 1..-1)}"
 
               _ ->
                 chassis_number
