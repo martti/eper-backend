@@ -1,5 +1,4 @@
 defmodule EperBackend.PatternParser do
-
   def parse(input) do
     parser = pattern()
     parser.(input)
@@ -32,7 +31,7 @@ defmodule EperBackend.PatternParser do
       char(?))
     ])
     |> map(fn [_, _, or_list, _] ->
-      [ :not, or_list ]
+      [:not, or_list]
     end)
   end
 
@@ -46,10 +45,13 @@ defmodule EperBackend.PatternParser do
   defp and_parts() do
     separated_list(
       choice([
-        subpattern(), negative_subpattern(), and_part()
+        subpattern(),
+        negative_subpattern(),
+        and_part()
       ]),
       many(char(?+)),
-      :and)
+      :and
+    )
   end
 
   defp or_parts() do
@@ -65,9 +67,11 @@ defmodule EperBackend.PatternParser do
       many(sequence([separator_parser, element_parser]))
     ])
     |> map(fn [first_element, rest] ->
-      other_elements = Enum.map(rest, fn [_, element] ->
-        element
-      end)
+      other_elements =
+        Enum.map(rest, fn [_, element] ->
+          element
+        end)
+
       [first_element | other_elements]
     end)
     |> map(fn list ->
@@ -85,7 +89,7 @@ defmodule EperBackend.PatternParser do
           with {:ok, first_term, rest} <- first_parser.(input),
                {:ok, other_terms, rest} <- sequence(other_parsers).(rest),
                do: {:ok, [first_term | other_terms], rest}
-        end
+      end
     end
   end
 
@@ -113,7 +117,7 @@ defmodule EperBackend.PatternParser do
     |> satisfy(fn chars -> chars != [] end)
     |> map(fn chars ->
       case chars do
-        [?! | rest] -> [ :not, to_string(rest) ]
+        [?! | rest] -> [:not, to_string(rest)]
         _ -> to_string(chars)
       end
     end)
@@ -170,5 +174,4 @@ defmodule EperBackend.PatternParser do
       end
     end
   end
-
 end

@@ -79,7 +79,6 @@ defmodule EperBackend.Router do
     |> send_resp(200, Jason.encode!(tbdata))
   end
 
-
   get "/api/vin/:vin" do
     vin_data = EperBackend.VinServer.search(vin)
 
@@ -115,12 +114,16 @@ defmodule EperBackend.Router do
   # image/model/F-BRA.jpg
   get "/api/image/logo/:brand.png" do
     valid = brand =~ ~r/^\w+$/
-    image_file = "#{Application.fetch_env!(:eper_backend, :site_image_path)}/#{brand}/tablet_startup_logo.png"
+
+    image_file =
+      "#{Application.fetch_env!(:eper_backend, :site_image_path)}/#{brand}/tablet_startup_logo.png"
+
     case File.exists?(image_file) && valid do
       true ->
         conn
         |> put_resp_content_type("image/png")
         |> send_file(200, image_file)
+
       _ ->
         send_resp(conn, 404, "not found")
     end
@@ -128,12 +131,16 @@ defmodule EperBackend.Router do
 
   get "/api/image/logo/:brand/:model.jpg" do
     valid = brand =~ ~r/^\w+$/ && model =~ ~r/^\w+$/
-    image_file = "#{Application.fetch_env!(:eper_backend, :site_image_path)}/#{brand}/model_imgs/normal/#{model}"
+
+    image_file =
+      "#{Application.fetch_env!(:eper_backend, :site_image_path)}/#{brand}/model_imgs/normal/#{model}"
+
     case File.exists?(image_file) && valid do
       true ->
         conn
         |> put_resp_content_type("image/jpeg")
         |> send_file(200, image_file)
+
       _ ->
         send_resp(conn, 404, "not found")
     end
