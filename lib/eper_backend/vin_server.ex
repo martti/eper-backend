@@ -40,15 +40,14 @@ defmodule EperBackend.VinServer do
         search_pk = "#{model_code}#{chassis_number}"
 
         Logger.info("Searching for #{search_pk}")
-        block = Ktdreader.Block.find(reader, search_pk)
 
-        case Ktdreader.Rows.find(reader, block, search_pk) do
-          [chassy, organization, motor, vin, date, color_interior, _] ->
-            model = String.slice(chassy, 0, 3)
+        case Ktdreader.Query.find_by_primary_key(reader, 1, search_pk) do
+          %{"MVS" => chassy} ->
+          # [chassy, organization, motor, vin, date, color_interior, _] ->
+            _model = String.slice(chassy, 0, 3)
             version = String.slice(chassy, 3, 3)
             series = String.slice(chassy, 6, 1)
             EperBackend.PartsServer.mvs(model_code, version, series)
-
           _ ->
             nil
         end

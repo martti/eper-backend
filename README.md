@@ -1,5 +1,7 @@
 # EperBackend
 
+Tested with ePer v.76 data
+
 ## Configuration
 
 Use `config/mix.exs` to set paths for ePER data files.

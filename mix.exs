@@ -24,6 +24,7 @@ defmodule EperBackend.MixProject do
     [
       {:plug_cowboy, "~> 2.0"},
       {:jason, "~> 1.2"},
+      # {:exsync, "~> 0.2", only: :dev},
       {:ktdreader, git: "https://github.com/martti/ktdreader.git"},
       {:jetdb, git: "https://github.com/martti/jetdb.git"}
       # {:dep_from_hexpm, "~> 0.3.0"},
